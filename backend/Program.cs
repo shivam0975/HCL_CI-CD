@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MySql.EntityFrameworkCore.Extensions;
+using Scalar.AspNetCore;
 using System.Text;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,9 +48,9 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("FacultyOnly", policy => policy.RequireRole("Faculty"));
-    options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("ADMIN"));
+    options.AddPolicy("FacultyOnly", policy => policy.RequireRole("FACULTY"));
+    options.AddPolicy("StudentOnly", policy => policy.RequireRole("STUDENT"));
 });
 
 var app = builder.Build();
@@ -57,6 +59,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
