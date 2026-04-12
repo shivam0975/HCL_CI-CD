@@ -8,7 +8,6 @@ publish/
 *.suo
 *.userosscache
 *.sln.docstates
-backend.slnx
 appsettings.json
 
 # Angular / Node
@@ -20,6 +19,7 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
 
 
 # General
