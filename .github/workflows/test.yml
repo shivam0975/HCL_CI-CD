@@ -52,7 +52,7 @@ jobs:
           dotnet-version: 10.x
 
       - name: Restore dependencies
-        working-directory: WebApp
+        working-directory: backend ##edit this
         run: dotnet restore
 
       - name: Build API	
