@@ -9,6 +9,7 @@ using MySql.EntityFrameworkCore.Extensions;
 using Scalar.AspNetCore;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
