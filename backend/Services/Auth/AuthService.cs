@@ -32,7 +32,9 @@ public sealed class AuthService(
             return AuthResult.Fail("Invalid username or password.");
         }
 
-        var roleName = user.Role?.RoleName ?? "Student";
+        var roleName = string.IsNullOrWhiteSpace(user.Role?.RoleName)
+            ? "Student"
+            : user.Role!.RoleName!.Trim();
         var (token, expiresAtUtc) = tokenService.GenerateToken(user.UserId, user.Username, roleName);
 
         return AuthResult.Success(user.UserId, user.Username, roleName, token, expiresAtUtc);
@@ -90,7 +92,9 @@ public sealed class AuthService(
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var roleName = role.RoleName ?? "Student";
+        var roleName = string.IsNullOrWhiteSpace(role.RoleName)
+            ? "Student"
+            : role.RoleName!.Trim();
         var (token, expiresAtUtc) = tokenService.GenerateToken(user.UserId, user.Username, roleName);
 
         return AuthResult.Success(user.UserId, user.Username, roleName, token, expiresAtUtc);

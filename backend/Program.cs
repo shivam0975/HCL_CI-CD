@@ -4,7 +4,10 @@ using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using MySql.EntityFrameworkCore.Extensions;
+using Scalar.AspNetCore;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +16,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+            {
+                options.AddDocumentTransformer((document, _, _) =>
+                {
+                    document.Components ??= new OpenApiComponents();
+                    document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+
+                    document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+                    {
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "bearer",
+                        BearerFormat = "JWT",
+                        In = ParameterLocation.Header,
+                        Name = "Authorization",
+                        Description = "Provide JWT token"
+                    };
+
+                    return Task.CompletedTask;
+                });
+            });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
@@ -40,15 +62,38 @@ builder.Services
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSection["Issuer"],
             ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = ClaimTypes.Name
         };
     });
 
+// builder.Services.AddAuthorization(options =>
+// {
+//     static bool HasRole(AuthorizationHandlerContext context, string role) =>
+//         context.User.Claims.Any(claim =>
+//             claim.Type == ClaimTypes.Role &&
+//             string.Equals(claim.Value?.Trim(), role, StringComparison.OrdinalIgnoreCase));
+
+//     options.AddPolicy("AdminOnly", policy =>
+//         policy.RequireAssertion(context => HasRole(context, "Admin")));
+
+//     options.AddPolicy("FacultyOnly", policy =>
+//         policy.RequireAssertion(context => HasRole(context, "Faculty")));
+
+//     options.AddPolicy("StudentOnly", policy =>
+//         policy.RequireAssertion(context => HasRole(context, "Student")));
+
+//     options.AddPolicy("AdminOrFaculty", policy =>
+//         policy.RequireAssertion(context => HasRole(context, "Admin") || HasRole(context, "Faculty")));
+// });
+
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("FacultyOnly", policy => policy.RequireRole("Faculty"));
-    options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "ADMIN"));
+    options.AddPolicy("FacultyOnly", policy => policy.RequireRole("Faculty", "FACULTY"));
+    options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student", "STUDENT"));
+    options.AddPolicy("AdminOrFaculty", policy => policy.RequireRole("Admin", "ADMIN", "Faculty", "FACULTY"));
 });
 
 var app = builder.Build();
@@ -57,6 +102,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
