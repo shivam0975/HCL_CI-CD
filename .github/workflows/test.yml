@@ -25,14 +25,14 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: front/package-lock.json  	#edit this
+          cache-dependency-path: frontend/package-lock.json  	#edit this
 
       - name: Install dependencies
-        working-directory: front			#edit this
+        working-directory: frontend			#edit this
         run: npm ci
 
       - name: Build Angular app
-        working-directory: front			#edit this
+        working-directory: frontend			#edit this
         run: npm run build -- --configuration production
 
   # ─────────────────────────────────────────
@@ -56,5 +56,5 @@ jobs:
         run: dotnet restore
 
       - name: Build API	
-        working-directory: WebApp	##edit this
+        working-directory: backend	##edit this
         run: dotnet build --no-restore --configuration Release
