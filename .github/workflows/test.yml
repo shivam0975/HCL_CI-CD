@@ -1,0 +1,60 @@
+name: CI Build Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # ─────────────────────────────────────────
+  # JOB 1: Angular
+  # ─────────────────────────────────────────
+  build-angular:
+    name: Angular Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: front/package-lock.json  	#edit this
+
+      - name: Install dependencies
+        working-directory: front			#edit this
+        run: npm ci
+
+      - name: Build Angular app
+        working-directory: front			#edit this
+        run: npm run build -- --configuration production
+
+  # ─────────────────────────────────────────
+  # JOB 2: .NET WebApp (WebApp/)
+  # ─────────────────────────────────────────
+  build-dotnet:
+    name: .NET Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.x
+
+      - name: Restore dependencies
+        working-directory: WebApp
+        run: dotnet restore
+
+      - name: Build API	
+        working-directory: WebApp	##edit this
+        run: dotnet build --no-restore --configuration Release
