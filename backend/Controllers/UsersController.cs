@@ -1,4 +1,5 @@
 using backend.DTOs.Users;
+using backend.Dtos;
 using backend.Models;
 using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -22,8 +23,7 @@ public sealed class UsersController(StudentManagementContext dbContext, IPasswor
             .Select(user => new UserReadDto(
                 user.UserId,
                 user.Username,
-                user.RoleId,
-                user.Role != null ? user.Role.RoleName : null,
+                user.Role != null ? new RoleDto(user.Role.RoleId, user.Role.RoleName) : null,
                 user.CreatedAt))
             .ToListAsync(cancellationToken);
 
@@ -62,7 +62,7 @@ public sealed class UsersController(StudentManagementContext dbContext, IPasswor
             return Conflict("Username already exists.");
         }
 
-        var role = await ResolveRoleAsync(request.RoleId, request.RoleName, cancellationToken);
+        var role = await ResolveRoleAsync(request.Role?.RoleId, request.Role?.RoleName, cancellationToken);
         if (role is null)
         {
             return BadRequest("A valid role could not be resolved.");
@@ -79,7 +79,7 @@ public sealed class UsersController(StudentManagementContext dbContext, IPasswor
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var readDto = new UserReadDto(user.UserId, user.Username, user.RoleId, role.RoleName, user.CreatedAt);
+        var readDto = new UserReadDto(user.UserId, user.Username, new RoleDto(role.RoleId, role.RoleName), user.CreatedAt);
         return CreatedAtAction(nameof(GetById), new { id = user.UserId }, readDto);
     }
 
@@ -116,9 +116,9 @@ public sealed class UsersController(StudentManagementContext dbContext, IPasswor
             user.PasswordHash = passwordService.HashPassword(request.Password);
         }
 
-        if (request.RoleId.HasValue || !string.IsNullOrWhiteSpace(request.RoleName))
+        if (request.Role is not null)
         {
-            var role = await ResolveRoleAsync(request.RoleId, request.RoleName, cancellationToken);
+            var role = await ResolveRoleAsync(request.Role.RoleId, request.Role.RoleName, cancellationToken);
             if (role is null)
             {
                 return BadRequest("A valid role could not be resolved.");
@@ -133,8 +133,7 @@ public sealed class UsersController(StudentManagementContext dbContext, IPasswor
         return Ok(new UserReadDto(
             user.UserId,
             user.Username,
-            user.RoleId,
-            user.Role?.RoleName,
+            user.Role != null ? new RoleDto(user.Role.RoleId, user.Role.RoleName) : null,
             user.CreatedAt));
     }
 
@@ -174,7 +173,7 @@ public sealed class UsersController(StudentManagementContext dbContext, IPasswor
     private static UserReadDto ToReadDto(User user) => new(
         user.UserId,
         user.Username,
-        user.RoleId,
-        user.Role?.RoleName,
-        user.CreatedAt);
+        user.Role != null ? new RoleDto(user.Role.RoleId, user.Role.RoleName) : null,
+        user.CreatedAt
+    );
 }

@@ -1,3 +1,5 @@
+using backend.Dtos;
+
 namespace backend.DTOs.Faculties;
 
 public sealed record FacultyReadDto(
@@ -8,4 +10,5 @@ public sealed record FacultyReadDto(
     int? DepartmentId,
     string? DepartmentName,
     string? Username,
+    RoleDto? Role,
     DateTime? CreatedAt);

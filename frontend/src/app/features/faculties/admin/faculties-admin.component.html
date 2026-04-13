@@ -1,0 +1,193 @@
+<section class="hero py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <span class="section-label">Admin Console</span>
+        <h1 class="h3 mb-1">Faculty Management</h1>
+        <p class="mb-0">Create, edit, search, and remove faculties.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary btn-sm" routerLink="/faculties/view">Faculty View</a>
+        <a class="btn btn-outline-primary btn-sm" routerLink="/departments/admin">Departments</a>
+        <a class="btn btn-secondary btn-sm" routerLink="/login" (click)="logout()">Logout</a>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-4">
+        <article class="card h-100">
+          <div class="card-body">
+            <div class="section-label mb-2">Overview</div>
+            <h2 class="h5 mb-2">Faculty Admin Hub</h2>
+            <p class="mb-0">Manage faculty records, update assignments, and inspect details.</p>
+          </div>
+        </article>
+      </div>
+      <div class="col-12 col-md-4">
+        <article class="card h-100">
+          <div class="card-body">
+            <div class="section-label mb-2">Quick View</div>
+            <h2 class="h5 mb-2">Faculty View Screen</h2>
+            <p class="mb-3">Switch to the read-only faculty portal for review-only access.</p>
+            <a class="btn btn-outline-primary btn-sm" routerLink="/faculties/view">Open View</a>
+          </div>
+        </article>
+      </div>
+      <div class="col-12 col-md-4">
+        <article class="card h-100">
+          <div class="card-body">
+            <div class="section-label mb-2">Related Area</div>
+            <h2 class="h5 mb-2">Departments</h2>
+            <p class="mb-3">Move directly to the department management screens.</p>
+            <a class="btn btn-outline-primary btn-sm" routerLink="/departments/admin">Go to Departments</a>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    @if (message()) {
+      <div class="alert mb-4" [class.alert-success]="isSuccess()" [class.alert-danger]="!isSuccess()" role="alert">
+        {{ message() }}
+      </div>
+    }
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-5">
+        <article class="card h-100">
+          <header class="card-header">
+            <h2 class="h5 mb-0">{{ pageTitle() }}</h2>
+          </header>
+          <div class="card-body">
+            <form class="row g-3" [formGroup]="facultyForm" (ngSubmit)="saveFaculty()" novalidate>
+              <div class="col-12">
+                <label class="form-label" for="userId">User ID</label>
+                <input id="userId" class="form-control" type="text" formControlName="userId" placeholder="User id" />
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="name">Name</label>
+                <input id="name" class="form-control" type="text" formControlName="name" placeholder="Faculty name" />
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="email">Email (optional)</label>
+                <input id="email" class="form-control" type="email" formControlName="email" placeholder="name@college.edu" />
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="departmentId">Department ID</label>
+                <input
+                  id="departmentId"
+                  class="form-control"
+                  type="text"
+                  formControlName="departmentId"
+                  placeholder="Department id"
+                />
+              </div>
+
+              <div class="col-12 d-flex gap-2">
+                <button class="btn btn-primary" type="submit" [disabled]="isSaving()">
+                  {{ isSaving() ? 'Saving...' : selectedFacultyId() === null ? 'Create Faculty' : 'Update Faculty' }}
+                </button>
+                <button class="btn btn-outline-primary" type="button" (click)="resetForm()">Reset</button>
+              </div>
+            </form>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-lg-7">
+        <article class="card h-100">
+          <header class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="h5 mb-0">Faculties</h2>
+            <button class="btn btn-outline-primary btn-sm" type="button" (click)="loadFaculties()" [disabled]="isLoading()">
+              {{ isLoading() ? 'Refreshing...' : 'Refresh' }}
+            </button>
+          </header>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (faculty of faculties(); track faculty.facultyId ?? faculty.id ?? faculty.userId) {
+                    <tr>
+                      <td>{{ faculty.facultyId ?? faculty.id ?? 'N/A' }}</td>
+                      <td>{{ faculty.name }}</td>
+                      <td>{{ faculty.email ?? 'N/A' }}</td>
+                      <td>{{ faculty.departmentId }}</td>
+                      <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                          <button class="btn btn-outline-primary btn-sm" type="button" (click)="editFaculty(faculty)">Edit</button>
+                          <button class="btn btn-outline-danger btn-sm" type="button" (click)="deleteFaculty(faculty)">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">No faculties found.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12">
+        <article class="card">
+          <header class="card-header">
+            <h2 class="h5 mb-0">Get Faculty By ID</h2>
+          </header>
+          <div class="card-body">
+            <form class="row g-3 align-items-end" [formGroup]="detailForm" (ngSubmit)="fetchFacultyById()" novalidate>
+              <div class="col-12 col-md-4">
+                <label class="form-label" for="facultyId">Faculty ID</label>
+                <input id="facultyId" class="form-control" type="number" formControlName="id" min="1" />
+              </div>
+              <div class="col-12 col-md-auto">
+                <button class="btn btn-primary" type="submit" [disabled]="isFetchingDetail()">
+                  {{ isFetchingDetail() ? 'Loading...' : 'Fetch' }}
+                </button>
+              </div>
+            </form>
+
+            @if (detailFaculty(); as faculty) {
+              <div class="row g-3 mt-2">
+                <div class="col-12 col-md-6 col-lg-3">
+                  <div class="stat-card">
+                    <div class="stat-label">ID</div>
+                    <div class="h5 mb-0 mt-2">{{ faculty.facultyId ?? faculty.id ?? 'N/A' }}</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                  <div class="stat-card">
+                    <div class="stat-label">User ID</div>
+                    <div class="h5 mb-0 mt-2">{{ faculty.userId }}</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                  <div class="stat-card">
+                    <div class="stat-label">Name</div>
+                    <div class="h5 mb-0 mt-2">{{ faculty.name }}</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                  <div class="stat-card">
+                    <div class="stat-label">Department</div>
+                    <div class="h5 mb-0 mt-2">{{ faculty.departmentId }}</div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
