@@ -1,4 +1,5 @@
 using backend.DTOs.Faculties;
+using backend.Dtos;
 using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ public sealed class FacultiesController(StudentManagementContext dbContext) : Co
         var faculties = await dbContext.Faculties
             .Include(faculty => faculty.Department)
             .Include(faculty => faculty.User)
+                .ThenInclude(user => user!.Role)
             .AsNoTracking()
             .Select(faculty => new FacultyReadDto(
                 faculty.FacultyId,
@@ -27,6 +29,9 @@ public sealed class FacultiesController(StudentManagementContext dbContext) : Co
                 faculty.DepartmentId,
                 faculty.Department != null ? faculty.Department.Name : null,
                 faculty.User != null ? faculty.User.Username : null,
+                faculty.User != null && faculty.User.Role != null
+                    ? new RoleDto(faculty.User.Role.RoleId, faculty.User.Role.RoleName)
+                    : null,
                 faculty.CreatedAt))
             .ToListAsync(cancellationToken);
 
@@ -40,6 +45,7 @@ public sealed class FacultiesController(StudentManagementContext dbContext) : Co
         var faculty = await dbContext.Faculties
             .Include(item => item.Department)
             .Include(item => item.User)
+                .ThenInclude(user => user!.Role)
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.FacultyId == id, cancellationToken);
 
@@ -105,6 +111,7 @@ public sealed class FacultiesController(StudentManagementContext dbContext) : Co
         var createdFaculty = await dbContext.Faculties
             .Include(item => item.Department)
             .Include(item => item.User)
+                .ThenInclude(user => user!.Role)
             .AsNoTracking()
             .FirstAsync(item => item.FacultyId == faculty.FacultyId, cancellationToken);
 
@@ -166,6 +173,7 @@ public sealed class FacultiesController(StudentManagementContext dbContext) : Co
         var updatedFaculty = await dbContext.Faculties
             .Include(item => item.Department)
             .Include(item => item.User)
+                .ThenInclude(user => user!.Role)
             .AsNoTracking()
             .FirstAsync(item => item.FacultyId == id, cancellationToken);
 
@@ -195,5 +203,6 @@ public sealed class FacultiesController(StudentManagementContext dbContext) : Co
         faculty.DepartmentId,
         faculty.Department?.Name,
         faculty.User?.Username,
+        faculty.User?.Role != null ? new RoleDto(faculty.User.Role.RoleId, faculty.User.Role.RoleName) : null,
         faculty.CreatedAt);
 }

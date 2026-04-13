@@ -1,0 +1,99 @@
+<section class="hero d-flex align-items-center">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-10 col-lg-7 col-xl-6">
+        <article class="card shadow-lg border-custom reveal visible">
+          <header class="card-header bg-muted border-custom">
+            <span class="section-label">Auth</span>
+            <h1 class="h3 mb-1">Create Account</h1>
+            <p class="mb-0">Register a new user using your API endpoint.</p>
+          </header>
+
+          <div class="card-body">
+            <form class="row g-3" [formGroup]="registerForm" (ngSubmit)="submit()" novalidate>
+              <div class="col-12">
+                <label class="form-label" for="username">Username</label>
+                <input
+                  id="username"
+                  type="text"
+                  class="form-control"
+                  formControlName="username"
+                  placeholder="Enter username"
+                  autocomplete="username"
+                />
+                @if (username().touched && username().invalid) {
+                  <small class="text-danger d-block mt-1">Username must be at least 3 characters.</small>
+                }
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="password">Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  class="form-control"
+                  formControlName="password"
+                  placeholder="Enter password"
+                  autocomplete="new-password"
+                />
+                @if (password().touched && password().invalid) {
+                  <small class="text-danger d-block mt-1">Password must be at least 6 characters.</small>
+                }
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="roleId">Role ID</label>
+                <input
+                  id="roleId"
+                  type="text"
+                  class="form-control"
+                  formControlName="roleId"
+                  placeholder="ex: 1"
+                />
+                @if (roleId().touched && roleId().invalid) {
+                  <small class="text-danger d-block mt-1">Role ID is required.</small>
+                }
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="roleName">Role Name (optional)</label>
+                <input
+                  id="roleName"
+                  type="text"
+                  class="form-control"
+                  formControlName="roleName"
+                  placeholder="ex: Admin"
+                />
+              </div>
+
+              <div class="col-12 d-grid pt-2">
+                <button class="btn btn-primary btn-lg" type="submit" [disabled]="isSubmitting()">
+                  @if (isSubmitting()) {
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                  }
+                  {{ isSubmitting() ? 'Registering...' : 'Register' }}
+                </button>
+              </div>
+            </form>
+
+            @if (serverMessage()) {
+              <div
+                class="alert mt-4 mb-0"
+                [class.alert-success]="isSuccess()"
+                [class.alert-danger]="!isSuccess()"
+                role="alert"
+              >
+                {{ serverMessage() }}
+              </div>
+            }
+          </div>
+
+          <footer class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <small class="text-secondary-custom">Already registered?</small>
+            <button class="btn btn-outline-primary btn-sm" type="button" (click)="openLogin()">Sign in</button>
+          </footer>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,3 +1,4 @@
+using backend.DTOs.Users;
 using backend.Services.Auth;
 using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -11,9 +12,17 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
 {
 	[AllowAnonymous]
 	[HttpPost("register")]
-	public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
+	public async Task<IActionResult> Register([FromBody] UserCreateDto request, CancellationToken cancellationToken)
 	{
-		var result = await authService.RegisterAsync(request, cancellationToken);
+		var registerRequest = new RegisterRequest
+		{
+			Username = request.Username,
+			Password = request.Password,
+			RoleId = request.Role?.RoleId,
+			RoleName = request.Role?.RoleName
+		};
+
+		var result = await authService.RegisterAsync(registerRequest, cancellationToken);
 		if (!result.Succeeded)
 		{
 			return BadRequest(result);

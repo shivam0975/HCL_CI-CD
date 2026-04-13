@@ -1,0 +1,7 @@
+:host {
+  display: block;
+}
+
+.card {
+  backdrop-filter: blur(6px);
+}
