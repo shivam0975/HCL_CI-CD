@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { DepartmentsService } from '../../../core/services/departments.service';
 import { SessionService } from '../../../core/services/session.service';
@@ -47,14 +48,12 @@ export class DepartmentsAdminComponent {
   protected loadDepartments(): void {
     this.isLoading.set(true);
     this.message.set(null);
-
-    this.departmentsService.getAll().subscribe({
+    this.departmentsService.getAll().pipe(finalize(() => this.isLoading.set(false))).subscribe({
       next: (data) => this.departments.set(data),
       error: () => {
         this.isSuccess.set(false);
         this.message.set('Failed to load departments list.');
-      },
-      complete: () => this.isLoading.set(false)
+      }
     });
   }
 
@@ -66,39 +65,25 @@ export class DepartmentsAdminComponent {
 
     const payload = this.toPayload();
     const selectedId = this.selectedDepartmentId();
-
     this.isSaving.set(true);
     this.message.set(null);
 
-    if (selectedId === null) {
-      this.departmentsService.create(payload).subscribe({
-        next: () => {
-          this.isSuccess.set(true);
-          this.message.set('Department created successfully.');
-          this.resetForm();
-          this.loadDepartments();
-        },
-        error: () => {
-          this.isSuccess.set(false);
-          this.message.set('Failed to create department.');
-        },
-        complete: () => this.isSaving.set(false)
-      });
-      return;
-    }
+    const obs = (selectedId === null)
+      ? this.departmentsService.create(payload)
+      : this.departmentsService.update(selectedId, payload);
 
-    this.departmentsService.update(selectedId, payload).subscribe({
+    obs.pipe(finalize(() => this.isSaving.set(false))).subscribe({
       next: () => {
         this.isSuccess.set(true);
-        this.message.set('Department updated successfully.');
+        this.message.set(selectedId === null ? 'Department created successfully.' : 'Department updated successfully.');
         this.resetForm();
         this.loadDepartments();
       },
-      error: () => {
+      error: (err) => {
         this.isSuccess.set(false);
-        this.message.set('Failed to update department.');
-      },
-      complete: () => this.isSaving.set(false)
+        const errorMsg = err.error?.message || err.error || 'Failed to save department.';
+        this.message.set(typeof errorMsg === 'string' ? errorMsg : 'Failed to save department.');
+      }
     });
   }
 
@@ -114,6 +99,10 @@ export class DepartmentsAdminComponent {
     if (id === null) {
       this.isSuccess.set(false);
       this.message.set('Cannot delete department without a valid id.');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete department ${id}?`)) {
       return;
     }
 
@@ -146,12 +135,15 @@ export class DepartmentsAdminComponent {
     this.detailDepartment.set(null);
 
     this.departmentsService.getById(id).subscribe({
-      next: (department) => this.detailDepartment.set(department),
+      next: (department) => {
+        this.detailDepartment.set(department);
+        this.isFetchingDetail.set(false);
+      },
       error: () => {
         this.isSuccess.set(false);
         this.message.set(`Department ${id} was not found.`);
-      },
-      complete: () => this.isFetchingDetail.set(false)
+        this.isFetchingDetail.set(false);
+      }
     });
   }
 
@@ -173,8 +165,8 @@ export class DepartmentsAdminComponent {
   }
 
   private getDepartmentId(department: Department): string | null {
-    return typeof department.departmentId === 'string' && department.departmentId.trim() !== ''
-      ? department.departmentId
-      : null;
+    const id = department.departmentId;
+    return id !== undefined && id !== null ? String(id) : null;
   }
 }
+

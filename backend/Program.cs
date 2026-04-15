@@ -2,6 +2,7 @@ using backend.Models;
 using backend.Services.Auth;
 using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -92,10 +93,55 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin", "ADMIN"));
-    options.AddPolicy("FacultyOnly", policy => policy.RequireRole("Faculty", "FACULTY"));
-    options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student", "STUDENT"));
-    options.AddPolicy("AdminOrFaculty", policy => policy.RequireRole("Admin", "ADMIN", "Faculty", "FACULTY"));
+    IEnumerable<string> GetRoleClaims(ClaimsPrincipal user)
+    {
+        return user.Claims
+            .Where(claim =>
+                claim.Type == ClaimTypes.Role ||
+                claim.Type.Equals("role", StringComparison.OrdinalIgnoreCase) ||
+                claim.Type.Equals("roles", StringComparison.OrdinalIgnoreCase))
+            .Select(claim => claim.Value.Trim())
+            .Where(value => !string.IsNullOrWhiteSpace(value));
+    }
+
+    bool HasRole(AuthorizationHandlerContext context, params string[] expectedRoleKeywords)
+    {
+        var roleClaims = GetRoleClaims(context.User).ToList();
+        if (roleClaims.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var claimValue in roleClaims)
+        {
+            foreach (var keyword in expectedRoleKeywords)
+            {
+                if (claimValue.Equals(keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                if (claimValue.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireAssertion(context => HasRole(context, "Admin")));
+
+    options.AddPolicy("FacultyOnly", policy =>
+        policy.RequireAssertion(context => HasRole(context, "Faculty")));
+
+    options.AddPolicy("StudentOnly", policy =>
+        policy.RequireAssertion(context => HasRole(context, "Student")));
+
+    options.AddPolicy("AdminOrFaculty", policy =>
+        policy.RequireAssertion(context => HasRole(context, "Admin", "Faculty")));
 });
 
 builder.Services.AddCors(options =>

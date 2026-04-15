@@ -154,7 +154,7 @@ public sealed class UsersController(StudentManagementContext dbContext, IPasswor
 
     private async Task<Role?> ResolveRoleAsync(int? roleId, string? roleName, CancellationToken cancellationToken)
     {
-        if (roleId.HasValue)
+        if (roleId.HasValue && roleId.Value > 0)
         {
             return await dbContext.Roles.FirstOrDefaultAsync(role => role.RoleId == roleId.Value, cancellationToken);
         }

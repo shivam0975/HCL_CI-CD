@@ -67,12 +67,7 @@ export class LoginComponent {
         this.serverMessage.set(response.message ?? 'Login request completed successfully.');
         this.authToken.set(token);
 
-        if (role === 'admin') {
-          this.router.navigateByUrl('/faculties/admin');
-          return;
-        }
-
-        this.router.navigateByUrl('/faculties/view');
+        this.router.navigateByUrl('/dashboard');
       },
       error: () => {
         this.isSuccess.set(false);

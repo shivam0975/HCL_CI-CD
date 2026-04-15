@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { RegisterRequest } from '../../../core/models/auth.models';
@@ -25,8 +26,7 @@ export class RegisterComponent {
   protected readonly registerForm = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    roleId: ['', Validators.required],
-    roleName: ['']
+    roleId: ['3', Validators.required]
   });
 
   protected readonly username = computed(() => this.registerForm.controls.username);
@@ -44,22 +44,22 @@ export class RegisterComponent {
 
     const payload = this.toPayload();
 
-    this.authService.register(payload).subscribe({
+    this.authService.register(payload).pipe(
+      finalize(() => this.isSubmitting.set(false))
+    ).subscribe({
       next: (response) => {
         this.isSuccess.set(true);
         this.serverMessage.set(response.message ?? 'Registration completed successfully.');
         this.registerForm.reset({
           username: '',
           password: '',
-          roleId: '',
-          roleName: ''
+          roleId: '3'
         });
       },
       error: () => {
         this.isSuccess.set(false);
         this.serverMessage.set('Unable to register with the provided details. Please try again.');
-      },
-      complete: () => this.isSubmitting.set(false)
+      }
     });
   }
 
@@ -73,8 +73,8 @@ export class RegisterComponent {
     return {
       username: rawValue.username.trim(),
       password: rawValue.password,
-      roleId: rawValue.roleId.trim(),
-      roleName: rawValue.roleName.trim() === '' ? null : rawValue.roleName.trim()
+      roleId: parseInt(rawValue.roleId, 10),
+      roleName: null
     };
   }
 }

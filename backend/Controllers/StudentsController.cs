@@ -11,7 +11,7 @@ namespace backend.Controllers;
 public class StudentsController(StudentManagementContext context) : ControllerBase
 {
     [HttpGet]
-    [Authorize(Roles = "Admin,Faculty")]
+    [Authorize(Policy = "AdminOrFaculty")]
     public async Task<IActionResult> GetStudents()
     {
         var students = await context.Students

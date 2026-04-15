@@ -1,0 +1,125 @@
+<section class="hero py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <span class="section-label">Admin / Faculty Console</span>
+        <h1 class="h3 mb-1">Attendance Management</h1>
+        <p class="mb-0">Record, edit, and track student attendance.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary btn-sm" routerLink="/dashboard">Dashboard</a>
+        <a class="btn btn-secondary btn-sm" routerLink="/login" (click)="logout()">Logout</a>
+      </div>
+    </div>
+
+    @if (message()) {
+      <div class="alert mb-4" [class.alert-success]="isSuccess()" [class.alert-danger]="!isSuccess()" role="alert">{{ message() }}</div>
+    }
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-5">
+        <article class="card h-100">
+          <header class="card-header"><h2 class="h5 mb-0">{{ pageTitle() }}</h2></header>
+          <div class="card-body">
+            <form class="row g-3" [formGroup]="attendanceForm" (ngSubmit)="saveAttendance()" novalidate>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="studentId">Student ID</label>
+                <input id="studentId" class="form-control" type="number" formControlName="studentId" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="courseId">Course ID</label>
+                <input id="courseId" class="form-control" type="number" formControlName="courseId" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="date">Date</label>
+                <input id="date" class="form-control" type="date" formControlName="date" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="status">Status</label>
+                <select id="status" class="form-select" formControlName="status">
+                  <option value="Present">Present</option>
+                  <option value="Absent">Absent</option>
+                  <option value="Late">Late</option>
+                </select>
+              </div>
+              <div class="col-12 d-flex gap-2">
+                <button class="btn btn-primary" type="submit" [disabled]="isSaving()">
+                  {{ isSaving() ? 'Saving...' : selectedAttendanceId() === null ? 'Record' : 'Update' }}
+                </button>
+                <button class="btn btn-outline-primary" type="button" (click)="resetForm()">Reset</button>
+              </div>
+            </form>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-lg-7">
+        <article class="card h-100">
+          <header class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="h5 mb-0">All Attendance Records</h2>
+            <button class="btn btn-outline-primary btn-sm" type="button" (click)="loadAttendances()" [disabled]="isLoading()">
+              {{ isLoading() ? 'Refreshing...' : 'Refresh' }}
+            </button>
+          </header>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>ID</th><th>Student</th><th>Course</th><th>Date</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                  @for (a of attendances(); track a.attendanceId) {
+                    <tr>
+                      <td>{{ a.attendanceId }}</td>
+                      <td>{{ a.studentId }}</td>
+                      <td>{{ a.courseId }}</td>
+                      <td>{{ a.date }}</td>
+                      <td><span class="badge" [class.badge-success]="a.status === 'Present'" [class.badge-danger]="a.status === 'Absent'" [class.badge-warning]="a.status === 'Late'">{{ a.status }}</span></td>
+                      <td class="text-end">
+                        <button class="btn btn-outline-primary btn-sm" type="button" (click)="editAttendance(a)">Edit</button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="6" class="text-center text-muted py-4">No attendance records.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12">
+        <article class="card">
+          <header class="card-header"><h2 class="h5 mb-0">Search By Student</h2></header>
+          <div class="card-body">
+            <form class="row g-3 align-items-end" [formGroup]="studentSearchForm" (ngSubmit)="fetchByStudent()" novalidate>
+              <div class="col-12 col-md-4">
+                <label class="form-label" for="searchStudentId">Student ID</label>
+                <input id="searchStudentId" class="form-control" type="number" formControlName="studentId" />
+              </div>
+              <div class="col-12 col-md-auto">
+                <button class="btn btn-primary" type="submit" [disabled]="isFetchingByStudent()">{{ isFetchingByStudent() ? 'Loading...' : 'Search' }}</button>
+              </div>
+            </form>
+            @if (studentAttendances().length > 0) {
+              <div class="table-responsive mt-3">
+                <table class="table table-hover align-middle mb-0">
+                  <thead><tr><th>ID</th><th>Course</th><th>Date</th><th>Status</th></tr></thead>
+                  <tbody>
+                    @for (a of studentAttendances(); track a.attendanceId) {
+                      <tr>
+                        <td>{{ a.attendanceId }}</td>
+                        <td>{{ a.courseId }}</td>
+                        <td>{{ a.date }}</td>
+                        <td><span class="badge" [class.badge-success]="a.status === 'Present'" [class.badge-danger]="a.status === 'Absent'" [class.badge-warning]="a.status === 'Late'">{{ a.status }}</span></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>

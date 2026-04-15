@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type AppRole = 'admin' | 'faculty';
+export type AppRole = 'admin' | 'faculty' | 'student';
 
 @Injectable({
   providedIn: 'root'
@@ -58,8 +58,8 @@ export class SessionService {
       }
     }
 
-    if (value === 'admin' || value === 'faculty') {
-      return value;
+    if (value === 'admin' || value === 'faculty' || value === 'student') {
+      return value as AppRole;
     }
 
     return null;
@@ -132,13 +132,23 @@ export class SessionService {
 
   private toAppRole(value: string): AppRole | null {
     const normalized = value.trim().toLowerCase();
+    console.log('[SessionService] Normalizing role:', normalized);
 
-    if (normalized.includes('admin')) {
+    if (normalized === 'admin' || normalized === 'administrator') {
       return 'admin';
     }
 
-    if (normalized.includes('faculty')) {
+    if (normalized === 'faculty' || normalized === 'facultymember' || normalized.includes('faculty')) {
       return 'faculty';
+    }
+
+    if (normalized === 'student' || normalized.includes('student')) {
+      return 'student';
+    }
+
+    // Fallback search
+    if (normalized.includes('admin')) {
+      return 'admin';
     }
 
     return null;
