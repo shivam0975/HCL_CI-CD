@@ -15,7 +15,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
 	public async Task<IActionResult> Register([FromBody] UserCreateDto request, CancellationToken cancellationToken)
 	{
 		var roleId = request.Role is not null && request.Role.RoleId > 0
-			? request.Role.RoleId
+			? (int?)request.Role.RoleId
 			: null;
 
 		var registerRequest = new RegisterRequest

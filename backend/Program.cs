@@ -2,6 +2,7 @@ using backend.Models;
 using backend.Services.Auth;
 using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -92,7 +93,7 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    static IEnumerable<string> GetRoleClaims(ClaimsPrincipal user)
+    IEnumerable<string> GetRoleClaims(ClaimsPrincipal user)
     {
         return user.Claims
             .Where(claim =>
@@ -103,7 +104,7 @@ builder.Services.AddAuthorization(options =>
             .Where(value => !string.IsNullOrWhiteSpace(value));
     }
 
-    static bool HasRole(AuthorizationHandlerContext context, params string[] expectedRoleKeywords)
+    bool HasRole(AuthorizationHandlerContext context, params string[] expectedRoleKeywords)
     {
         var roleClaims = GetRoleClaims(context.User).ToList();
         if (roleClaims.Count == 0)
