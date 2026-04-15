@@ -1,0 +1,112 @@
+<section class="hero py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <span class="section-label">Admin Console</span>
+        <h1 class="h3 mb-1">User Management</h1>
+        <p class="mb-0">Create, edit, search, and remove users.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary btn-sm" routerLink="/dashboard">Dashboard</a>
+        <a class="btn btn-secondary btn-sm" routerLink="/login" (click)="logout()">Logout</a>
+      </div>
+    </div>
+
+    @if (message()) {
+      <div class="alert mb-4" [class.alert-success]="isSuccess()" [class.alert-danger]="!isSuccess()" role="alert">{{ message() }}</div>
+    }
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-5">
+        <article class="card h-100">
+          <header class="card-header"><h2 class="h5 mb-0">{{ pageTitle() }}</h2></header>
+          <div class="card-body">
+            <form class="row g-3" [formGroup]="userForm" (ngSubmit)="saveUser()" novalidate>
+              <div class="col-12">
+                <label class="form-label" for="username">Username</label>
+                <input id="username" class="form-control" type="text" formControlName="username" placeholder="Username" />
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="password">Password</label>
+                <input id="password" class="form-control" type="password" formControlName="password" placeholder="Password" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="roleId">Role ID</label>
+                <input id="roleId" class="form-control" type="number" formControlName="roleId" placeholder="Role ID" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="roleName">Role Name</label>
+                <input id="roleName" class="form-control" type="text" formControlName="roleName" placeholder="e.g. Admin" />
+              </div>
+              <div class="col-12 d-flex gap-2">
+                <button class="btn btn-primary" type="submit" [disabled]="isSaving()">
+                  {{ isSaving() ? 'Saving...' : selectedUserId() === null ? 'Create User' : 'Update User' }}
+                </button>
+                <button class="btn btn-outline-primary" type="button" (click)="resetForm()">Reset</button>
+              </div>
+            </form>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-lg-7">
+        <article class="card h-100">
+          <header class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="h5 mb-0">Users</h2>
+            <button class="btn btn-outline-primary btn-sm" type="button" (click)="loadUsers()" [disabled]="isLoading()">{{ isLoading() ? 'Refreshing...' : 'Refresh' }}</button>
+          </header>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                  @for (user of users(); track user.userId) {
+                    <tr>
+                      <td>{{ user.userId }}</td>
+                      <td>{{ user.username }}</td>
+                      <td>{{ user.role?.roleName }}</td>
+                      <td>{{ user.createdAt }}</td>
+                      <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                          <button class="btn btn-outline-primary btn-sm" type="button" (click)="editUser(user)">Edit</button>
+                          <button class="btn btn-outline-danger btn-sm" type="button" (click)="deleteUser(user)">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No users found.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12">
+        <article class="card">
+          <header class="card-header"><h2 class="h5 mb-0">Get User By ID</h2></header>
+          <div class="card-body">
+            <form class="row g-3 align-items-end" [formGroup]="detailForm" (ngSubmit)="fetchUserById()" novalidate>
+              <div class="col-12 col-md-4">
+                <label class="form-label" for="fetchUserId">User ID</label>
+                <input id="fetchUserId" class="form-control" type="number" formControlName="userId" />
+              </div>
+              <div class="col-12 col-md-auto">
+                <button class="btn btn-primary" type="submit" [disabled]="isFetchingDetail()">{{ isFetchingDetail() ? 'Loading...' : 'Fetch' }}</button>
+              </div>
+            </form>
+            @if (detailUser(); as user) {
+              <div class="row g-3 mt-2">
+                <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-label">ID</div><div class="h5 mb-0 mt-2">{{ user.userId }}</div></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-label">Username</div><div class="h5 mb-0 mt-2">{{ user.username }}</div></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-label">Role</div><div class="h5 mb-0 mt-2">{{ user.role?.roleName }}</div></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-label">Created</div><div class="h5 mb-0 mt-2">{{ user.createdAt }}</div></div></div>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>

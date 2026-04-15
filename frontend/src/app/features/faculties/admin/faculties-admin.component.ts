@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { FacultiesService } from '../../../core/services/faculties.service';
 import { SessionService } from '../../../core/services/session.service';
@@ -33,10 +34,10 @@ export class FacultiesAdminComponent {
   });
 
   protected readonly facultyForm = this.fb.nonNullable.group({
-    userId: ['', Validators.required],
+    userId: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
     name: ['', [Validators.required, Validators.minLength(2)]],
     email: [''],
-    departmentId: ['', Validators.required]
+    departmentId: ['', [Validators.required, Validators.pattern(/^\d+$/)]]
   });
 
   protected readonly pageTitle = computed(() =>
@@ -50,17 +51,11 @@ export class FacultiesAdminComponent {
   protected loadFaculties(): void {
     this.isLoading.set(true);
     this.message.set(null);
-
-    this.facultiesService.getAll().subscribe({
-      next: (data) => {
-        this.faculties.set(data);
-      },
+    this.facultiesService.getAll().pipe(finalize(() => this.isLoading.set(false))).subscribe({
+      next: (data) => this.faculties.set(data),
       error: () => {
         this.isSuccess.set(false);
         this.message.set('Failed to load faculties list.');
-      },
-      complete: () => {
-        this.isLoading.set(false);
       }
     });
   }
@@ -73,54 +68,40 @@ export class FacultiesAdminComponent {
 
     const payload = this.toPayload();
     const selectedId = this.selectedFacultyId();
-
     this.isSaving.set(true);
     this.message.set(null);
 
-    if (selectedId === null) {
-      this.facultiesService.create(payload).subscribe({
-        next: () => {
-          this.isSuccess.set(true);
-          this.message.set('Faculty created successfully.');
-          this.resetForm();
-          this.loadFaculties();
-        },
-        error: () => {
-          this.isSuccess.set(false);
-          this.message.set('Failed to create faculty.');
-        },
-        complete: () => {
-          this.isSaving.set(false);
-        }
-      });
-      return;
-    }
+    const obs = (selectedId === null)
+      ? this.facultiesService.create(payload)
+      : this.facultiesService.update(selectedId, payload);
 
-    this.facultiesService.update(selectedId, payload).subscribe({
+    obs.pipe(finalize(() => this.isSaving.set(false))).subscribe({
       next: () => {
         this.isSuccess.set(true);
-        this.message.set('Faculty updated successfully.');
+        this.message.set(selectedId === null ? 'Faculty created successfully.' : 'Faculty updated successfully.');
         this.resetForm();
         this.loadFaculties();
       },
-      error: () => {
+      error: (err) => {
         this.isSuccess.set(false);
-        this.message.set('Failed to update faculty.');
-      },
-      complete: () => {
-        this.isSaving.set(false);
+        const errorMsg = err.error?.message || err.error || 'Failed to save faculty.';
+        this.message.set(typeof errorMsg === 'string' ? errorMsg : 'Failed to save faculty.');
       }
     });
   }
 
   protected editFaculty(faculty: Faculty): void {
-    this.selectedFacultyId.set(this.getFacultyId(faculty));
+    const id = this.getFacultyId(faculty);
+    if (id === null) return;
+    
+    this.selectedFacultyId.set(id);
     this.facultyForm.setValue({
       userId: String(faculty.userId ?? ''),
       name: faculty.name ?? '',
       email: faculty.email ?? '',
       departmentId: String(faculty.departmentId ?? '')
     });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   protected deleteFaculty(faculty: Faculty): void {
@@ -129,6 +110,10 @@ export class FacultiesAdminComponent {
     if (id === null) {
       this.isSuccess.set(false);
       this.message.set('Cannot delete faculty without a valid id.');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete Faculty #${id}?`)) {
       return;
     }
 
@@ -164,12 +149,11 @@ export class FacultiesAdminComponent {
     this.facultiesService.getById(id).subscribe({
       next: (faculty) => {
         this.detailFaculty.set(faculty);
+        this.isFetchingDetail.set(false);
       },
       error: () => {
         this.isSuccess.set(false);
         this.message.set(`Faculty #${id} was not found.`);
-      },
-      complete: () => {
         this.isFetchingDetail.set(false);
       }
     });
@@ -189,26 +173,20 @@ export class FacultiesAdminComponent {
     });
   }
 
-  private toPayload(): FacultyCreateRequest {
+  private toPayload(): any {
     const rawValue = this.facultyForm.getRawValue();
 
     return {
-      userId: String(rawValue.userId).trim(),
+      userId: rawValue.userId ? parseInt(rawValue.userId, 10) : null,
       name: rawValue.name.trim(),
       email: rawValue.email.trim() === '' ? null : rawValue.email.trim(),
-      departmentId: String(rawValue.departmentId).trim()
+      departmentId: rawValue.departmentId ? parseInt(rawValue.departmentId, 10) : null
     };
   }
 
   private getFacultyId(faculty: Faculty): number | null {
-    if (typeof faculty.facultyId === 'number') {
-      return faculty.facultyId;
-    }
-
-    if (typeof faculty.id === 'number') {
-      return faculty.id;
-    }
-
-    return null;
+    const id = faculty.facultyId ?? faculty.id;
+    return typeof id === 'number' ? id : null;
   }
 }
+

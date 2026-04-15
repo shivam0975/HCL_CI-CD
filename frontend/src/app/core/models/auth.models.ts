@@ -1,7 +1,7 @@
 export interface RegisterRequest {
   username: string;
   password: string;
-  roleId: string;
+  roleId: string | number;
   roleName: string | null;
 }
 

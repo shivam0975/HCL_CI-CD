@@ -14,11 +14,15 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
 	[HttpPost("register")]
 	public async Task<IActionResult> Register([FromBody] UserCreateDto request, CancellationToken cancellationToken)
 	{
+		var roleId = request.Role is not null && request.Role.RoleId > 0
+			? request.Role.RoleId
+			: null;
+
 		var registerRequest = new RegisterRequest
 		{
 			Username = request.Username,
 			Password = request.Password,
-			RoleId = request.Role?.RoleId,
+			RoleId = roleId,
 			RoleName = request.Role?.RoleName
 		};
 

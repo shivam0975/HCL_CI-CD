@@ -41,29 +41,20 @@
                 }
               </div>
 
-              <div class="col-12 col-md-6">
-                <label class="form-label" for="roleId">Role ID</label>
-                <input
+              <div class="col-12">
+                <label class="form-label" for="roleId">Select Role</label>
+                <select
                   id="roleId"
-                  type="text"
-                  class="form-control"
+                  class="form-select"
                   formControlName="roleId"
-                  placeholder="ex: 1"
-                />
+                >
+                  <option value="3">Student</option>
+                  <option value="2">Faculty</option>
+                  <option value="1">Admin</option>
+                </select>
                 @if (roleId().touched && roleId().invalid) {
-                  <small class="text-danger d-block mt-1">Role ID is required.</small>
+                  <small class="text-danger d-block mt-1">Role is required.</small>
                 }
-              </div>
-
-              <div class="col-12 col-md-6">
-                <label class="form-label" for="roleName">Role Name (optional)</label>
-                <input
-                  id="roleName"
-                  type="text"
-                  class="form-control"
-                  formControlName="roleName"
-                  placeholder="ex: Admin"
-                />
               </div>
 
               <div class="col-12 d-grid pt-2">

@@ -1,0 +1,101 @@
+<section class="hero py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <span class="section-label">Admin Console</span>
+        <h1 class="h3 mb-1">Course–Faculty Assignments</h1>
+        <p class="mb-0">Assign courses to faculties and manage assignments.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary btn-sm" routerLink="/dashboard">Dashboard</a>
+        <a class="btn btn-secondary btn-sm" routerLink="/login" (click)="logout()">Logout</a>
+      </div>
+    </div>
+
+    @if (message()) {
+      <div class="alert mb-4" [class.alert-success]="isSuccess()" [class.alert-danger]="!isSuccess()" role="alert">{{ message() }}</div>
+    }
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-5">
+        <article class="card h-100">
+          <header class="card-header"><h2 class="h5 mb-0">{{ pageTitle() }}</h2></header>
+          <div class="card-body">
+            <form class="row g-3" [formGroup]="cfForm" (ngSubmit)="save()" novalidate>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="courseId">Course ID</label>
+                <input id="courseId" class="form-control" type="number" formControlName="courseId" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="facultyId">Faculty ID</label>
+                <input id="facultyId" class="form-control" type="number" formControlName="facultyId" />
+              </div>
+              <div class="col-12 d-flex gap-2">
+                <button class="btn btn-primary" type="submit" [disabled]="isSaving()">
+                  {{ isSaving() ? 'Saving...' : selectedId() === null ? 'Assign' : 'Update' }}
+                </button>
+                <button class="btn btn-outline-primary" type="button" (click)="resetForm()">Reset</button>
+              </div>
+            </form>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-lg-7">
+        <article class="card h-100">
+          <header class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="h5 mb-0">Assignments</h2>
+            <button class="btn btn-outline-primary btn-sm" type="button" (click)="load()" [disabled]="isLoading()">{{ isLoading() ? 'Refreshing...' : 'Refresh' }}</button>
+          </header>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>ID</th><th>Course</th><th>Faculty</th><th>Assigned At</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                  @for (item of items(); track item.id) {
+                    <tr>
+                      <td>{{ item.id }}</td><td>{{ item.courseId }}</td><td>{{ item.facultyId }}</td><td>{{ item.assignedAt }}</td>
+                      <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                          <button class="btn btn-outline-primary btn-sm" type="button" (click)="edit(item)">Edit</button>
+                          <button class="btn btn-outline-danger btn-sm" type="button" (click)="remove(item)">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No assignments found.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12">
+        <article class="card">
+          <header class="card-header"><h2 class="h5 mb-0">Get Assignment By ID</h2></header>
+          <div class="card-body">
+            <form class="row g-3 align-items-end" [formGroup]="detailForm" (ngSubmit)="fetchById()" novalidate>
+              <div class="col-12 col-md-4">
+                <label class="form-label" for="fetchId">Assignment ID</label>
+                <input id="fetchId" class="form-control" type="number" formControlName="id" />
+              </div>
+              <div class="col-12 col-md-auto">
+                <button class="btn btn-primary" type="submit" [disabled]="isFetchingDetail()">{{ isFetchingDetail() ? 'Loading...' : 'Fetch' }}</button>
+              </div>
+            </form>
+            @if (detailItem(); as item) {
+              <div class="row g-3 mt-2">
+                <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-label">ID</div><div class="h5 mb-0 mt-2">{{ item.id }}</div></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-label">Course</div><div class="h5 mb-0 mt-2">{{ item.courseId }}</div></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-label">Faculty</div><div class="h5 mb-0 mt-2">{{ item.facultyId }}</div></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-label">Assigned</div><div class="h5 mb-0 mt-2">{{ item.assignedAt }}</div></div></div>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
